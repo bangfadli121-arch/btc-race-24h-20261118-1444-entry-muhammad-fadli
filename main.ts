@@ -12,6 +12,9 @@ const SYMBOL = 'CBBTC';
 //   search over tranche times) evaluated on BOTH dev windows: they are the
 //   only early/late times that help the new window without hurting the old
 //   one (bar 300 was rejected: it loses on the old window).
+//   Each schedule tranche is flat-only and capped at 25% of cash, so a
+//   mistimed tranche can cost at most ~0.3% of equity at the 1.2% stop;
+//   the dip trade stays the main engine and keeps full size.
 // Two refinements vs v5, both verified on both windows: (a) exits are
 //   measured against the position's average fill price (cost/qty from the
 //   harness), not the fill bar's close — TP/SL vs what was actually paid;
