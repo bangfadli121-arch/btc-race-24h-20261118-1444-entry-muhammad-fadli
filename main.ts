@@ -26,6 +26,18 @@ let entryClose = 0n;
 let entryBar = -1;
 let lastExitBar = -1_000_000;
 
+// Highest close over the last `lookback` bars, current bar included.
+// (Including the current close keeps the dip test honest: the high can
+// never sit below the close being tested.)
+function rollingHigh(lookback: number): bigint {
+  let high = 0n;
+  const start = closes.length - lookback;
+  for (let i = start; i < closes.length; i++) {
+    if (closes[i] > high) high = closes[i];
+  }
+  return high;
+}
+
 await runBars({
   onBatch(state, batch) {
     const position = state.positions.get(SYMBOL);
@@ -62,11 +74,7 @@ await runBars({
           return [{ side: 'sell', symbol: SYMBOL, qty: position.qty, max_slippage_bps: 150 }];
         }
       } else if (pending === null && closes.length >= WARMUP && batch.seq - lastExitBar >= COOLDOWN) {
-        let high = 0n;
-        const start = closes.length - LOOKBACK;
-        for (let i = start; i < closes.length; i++) {
-          if (closes[i] > high) high = closes[i];
-        }
+        const high = rollingHigh(LOOKBACK);
         if (high > 0n && close * 1000n <= high * (1000n - BigInt(DIP_PM)) && state.cash > 0n) {
           pending = 'buy';
           wasLong = false;
